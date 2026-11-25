@@ -1,0 +1,136 @@
+# Pushing a version tag (v0.1.0, v0.2.0, v1.0.0-beta.1 …) publishes that version:
+#   1. checks the tag matches frontend/package.json and has a CHANGELOG section
+#   2. builds the image for x86-64 and ARM64 and pushes it to GitHub Container
+#      Registry as :0.2.0, :0.2 and :latest (pre-releases only get their exact
+#      tag). The image build runs the Go tests.
+#   3. creates the GitHub release with that version's CHANGELOG section as notes
+# To release: set "version" in frontend/package.json, move the notes under
+# "## [Unreleased]" in CHANGELOG.md to "## [X.Y.Z] - date", commit, then
+#   git tag vX.Y.Z && git push origin main vX.Y.Z
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check the tag matches the code
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          fail=0
+          got=$(jq -r .version frontend/package.json)
+          [ "$got" = "$VERSION" ] || { echo "::error file=frontend/package.json::version is $got but the tag is $GITHUB_REF_NAME"; fail=1; }
+          grep -q "^## \[$VERSION\]" CHANGELOG.md || { echo "::error file=CHANGELOG.md::no '## [$VERSION]' section; the release notes come from there"; fail=1; }
+          [ "$fail" = 0 ] || exit 1
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          case "$VERSION" in *-*) echo "prerelease=true" ;; *) echo "prerelease=false" ;; esac >> "$GITHUB_OUTPUT"
+
+  image:
+    name: Publish image
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image tags
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/oddomens/quire
+          # {{major}}.{{minor}} is skipped automatically for pre-releases. No
+          # bare {{major}} tag while the major version is 0.
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          flavor: |
+            latest=${{ needs.verify.outputs.prerelease == 'false' }}
+          labels: |
+            org.opencontainers.image.title=quire
+            org.opencontainers.image.licenses=AGPL-3.0-only
+            org.opencontainers.image.vendor=Odd Omens LLC
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: VERSION=${{ needs.verify.outputs.version }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha,scope=quire
+          cache-to: type=gha,mode=max,scope=quire
+
+  release:
+    name: GitHub release
+    needs: [verify, image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Release notes from CHANGELOG
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          # Everything under "## [VERSION]" up to the next heading or the link list.
+          awk -v v="$VERSION" '
+            index($0, "## [" v "]") == 1 { on = 1; next }
+            on && (/^## \[/ || /^\[[^]]+\]: /) { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          cat >> notes.md <<EOF
+
+          ---
+          **New install:** clone the repo at \`$GITHUB_REF_NAME\`, then follow [Run it](https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/README.md#run-it).
+          **Update:** set \`QUIRE_VERSION=$VERSION\` in \`.env\` (or leave it on \`latest\`), then \`docker compose pull && docker compose up -d\`.
+          **Image** (x86-64 and ARM64): \`ghcr.io/oddomens/quire:$VERSION\`
+          EOF
+          cat notes.md
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRERELEASE: ${{ needs.verify.outputs.prerelease }}
+        run: |
+          flags=""
+          [ "$PRERELEASE" = "true" ] && flags="--prerelease"
+          gh release create "$GITHUB_REF_NAME" --title "Quire $GITHUB_REF_NAME" --notes-file notes.md --verify-tag $flags
