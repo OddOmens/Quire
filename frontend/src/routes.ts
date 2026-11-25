@@ -15,6 +15,7 @@ export const screens = {
   settings: () => import("@/pages/settings"),
   share: () => import("@/pages/share"),
   calendar: () => import("@/pages/calendar"),
+  ask: () => import("@/pages/ask"),
   form: () => import("@/pages/form"),
   login: () => import("@/pages/login"),
   setup: () => import("@/pages/setup"),
@@ -49,6 +50,7 @@ export function screenFor(pathname: string): Screen | undefined {
     case "tags":
     case "trash":
     case "calendar":
+    case "ask":
     case "form":
     case "settings":
     case "share":

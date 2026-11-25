@@ -608,10 +608,20 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 	if limit <= 0 || limit > 100 {
 		limit = 30
 	}
-	hits, err := s.store.Search(r.URL.Query().Get("q"), limit)
+	q := r.URL.Query().Get("q")
+	hits, err := s.store.Search(q, limit)
 	if err != nil {
 		s.fail(w, r, err)
 		return
+	}
+	// best=1 puts the sections that fit the words best first: found the way
+	// Ask finds them, so word forms, other words for the same thing and
+	// misspellings still match.
+	if r.URL.Query().Get("best") == "1" {
+		if hits, err = s.bestFirst(q, hits, limit); err != nil {
+			s.fail(w, r, err)
+			return
+		}
 	}
 	writeJSON(w, http.StatusOK, hits)
 }

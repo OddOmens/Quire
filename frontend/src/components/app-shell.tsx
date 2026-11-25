@@ -9,6 +9,7 @@ import {
   FilePlus2,
   FileSpreadsheet,
   House,
+  MessageCircleQuestionMark,
   LayoutGrid,
   ListTodo,
   LogOut,
@@ -284,6 +285,7 @@ function SpaceSidebar() {
   const label = cn(sidebarLabel, "max-w-[calc(100cqw-2.625rem)]")
   const nav = [
     { to: overview, label: "Overview", icon: House },
+    { to: "/ask", label: "Ask", icon: MessageCircleQuestionMark },
     { to: spaceGraphUrl(space), label: "Graph", icon: Network },
     { to: spaceTasksUrl(space), label: "Tasks", icon: ListTodo },
     { to: "/calendar", label: "Calendar", icon: CalendarDays },

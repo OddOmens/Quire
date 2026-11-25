@@ -110,10 +110,43 @@ ALTER TABLE account ADD COLUMN full_width INTEGER NOT NULL DEFAULT 1;
 -- backslash in their target, so backlinks missed them. Mark those pages
 -- stale; the next scan reads them again (same content: no history added).
 UPDATE notes SET mtime = 0 WHERE path IN (SELECT src FROM links WHERE target LIKE '%\');
+`, `
+-- Sections of pages for answering questions (package ask): offsets into
+-- the page, a contentless search index over their text, and the labels
+-- links use for pages. Pages saved from now on get them at once; the rest
+-- are filled in the background after start (FillPassages).
+CREATE TABLE passage_pages (
+	path TEXT PRIMARY KEY,
+	doc  INTEGER NOT NULL -- the page's rowid in fts, to read its text
+);
+CREATE TABLE passages (
+	id      INTEGER PRIMARY KEY,
+	path    TEXT NOT NULL,
+	section INTEGER NOT NULL,
+	part    INTEGER NOT NULL,
+	heading TEXT NOT NULL,
+	trail   TEXT NOT NULL, -- the headings above it and its own
+	level   INTEGER NOT NULL,
+	start   INTEGER NOT NULL,
+	stop    INTEGER NOT NULL,
+	flags   INTEGER NOT NULL,
+	words   INTEGER NOT NULL
+);
+CREATE INDEX passages_path ON passages(path, section, part);
+CREATE VIRTUAL TABLE passage_fts USING fts5(title, heading, body, content='', contentless_delete=1, tokenize = 'porter unicode61');
+CREATE VIRTUAL TABLE passage_vocab USING fts5vocab(passage_fts, 'row');
+CREATE TABLE aliases (
+	src    TEXT NOT NULL,
+	label  TEXT NOT NULL,
+	target TEXT NOT NULL
+);
+CREATE INDEX aliases_label ON aliases(label);
+CREATE INDEX aliases_src ON aliases(src);
 `}
 
 type Store struct {
-	db *sql.DB
+	db    *sql.DB
+	spell spelling
 }
 
 func Open(file string) (*Store, error) {
@@ -225,7 +258,15 @@ func (s *Store) Put(e vault.Entry, content []byte) error {
 			return err
 		}
 	}
-	if _, err := tx.Exec(`INSERT INTO fts (path, title, body) VALUES (?,?,?)`, e.Path, title, text); err != nil {
+	res, err := tx.Exec(`INSERT INTO fts (path, title, body) VALUES (?,?,?)`, e.Path, title, text)
+	if err != nil {
+		return err
+	}
+	doc, err := res.LastInsertId()
+	if err != nil {
+		return err
+	}
+	if err := putPassages(tx, doc, e.Path, title, text); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -242,7 +283,7 @@ func deleteNote(tx *sql.Tx, p string) error {
 			return err
 		}
 	}
-	return nil
+	return deletePassages(tx, p)
 }
 
 func (s *Store) Delete(paths ...string) error {
@@ -514,6 +555,8 @@ type Hit struct {
 	Title   string `json:"title"`
 	Folder  string `json:"folder"`
 	Snippet string `json:"snippet"`
+	// Heading is the section the match is in, when the search knows it.
+	Heading string `json:"heading,omitempty"`
 }
 
 // Search runs a full-text query. Every word must match; the last one may be

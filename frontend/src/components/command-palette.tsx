@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { FilePlus2, FileText, Hash, House, LayoutGrid, ListTodo, Moon, Network, Plus, Search, Settings, Settings2, Sun, TextSearch, Trash2 } from "lucide-react"
+import { FilePlus2, FileText, Hash, House, LayoutGrid, ListTodo, MessageCircleQuestionMark, Moon, Network, Plus, Search, Settings, Settings2, Sun, TextSearch, Trash2 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useNavigate } from "react-router"
 
@@ -75,6 +75,14 @@ function Snippet({ text }: { text: string }) {
   )
 }
 
+/** Whether typed text reads like a question rather than a page name. */
+export function isQuestion(text: string) {
+  const t = text.trim().toLowerCase()
+  if (t.length < 6 || t.startsWith("#")) return false
+  if (t.endsWith("?")) return true
+  return /^(how|what|whats|what's|when|where|why|who|which|is|are|can|could|should|do|does|did|will|would|tell me|explain|my|someone|i'm|im|i)\b/.test(t) && t.split(/\s+/).length >= 3
+}
+
 const where = (path: string) => baseOf(path).split("/").slice(0, -1).join(" / ")
 
 export function CommandPalette() {
@@ -100,7 +108,10 @@ export function CommandPalette() {
       }
     }
     window.addEventListener("keydown", onKey)
-    const off = onUiEvent("quire:palette", () => setOpen(true))
+    const off = onUiEvent("quire:palette", (q?: string) => {
+      setOpen(true)
+      if (q) setTimeout(() => setQuery(q))
+    })
     return () => {
       window.removeEventListener("keydown", onKey)
       off()
@@ -114,14 +125,18 @@ export function CommandPalette() {
   const titles = useMemo(() => rank(tree?.notes ?? [], query), [tree, query])
   const q = useDebounced(query.trim(), 150)
   const { data: hits } = useQuery({
-    queryKey: ["search", q],
-    queryFn: () => api.search(q, 12),
+    queryKey: ["search", "best", q],
+    queryFn: () => api.search(q, 12, true),
     enabled: open && q.length >= 2,
     placeholderData: (prev) => prev,
   })
-  const fullText = q.length >= 2 ? (hits ?? []).filter((h) => !titles.some((t) => t.path === h.path)) : []
-  const exact = tree?.notes.some((n) => n.title.toLowerCase() === query.trim().toLowerCase())
+  // A page already listed by its title is listed again only for a section of it.
+  const fullText = q.length >= 2 ? (hits ?? []).filter((h) => h.heading || !titles.some((t) => t.path === h.path)) : []
+  const exact = (tree?.notes ?? []).some((n) => n.title.toLowerCase() === query.trim().toLowerCase())
   const matchingSpaces = (spaces ?? []).filter((s) => query.trim() && s.name.toLowerCase().includes(query.trim().toLowerCase()))
+
+  // Something that reads like a question gets an "Ask" row at the top.
+  const question = isQuestion(query)
 
   const dark = resolvedTheme === "dark"
   const commands = [
@@ -130,6 +145,7 @@ export function CommandPalette() {
     { id: "new-space", label: "New space", icon: LayoutGrid, shortcut: "", run: () => openSpaceDialog() },
     ...(space ? [{ id: "space-settings", label: `${space} settings`, icon: Settings2, shortcut: "", run: () => navigate(spaceSettingsUrl(space)) }] : []),
     { id: "home", label: "Home", icon: House, shortcut: "", run: () => navigate("/") },
+    { id: "ask", label: "Ask your notes", icon: MessageCircleQuestionMark, shortcut: "", run: () => navigate("/ask") },
     { id: "graph", label: "Graph", icon: Network, shortcut: "", run: () => navigate(space ? spaceGraphUrl(space) : "/graph") },
     ...(space ? [{ id: "tasks", label: "Tasks", icon: ListTodo, shortcut: "", run: () => navigate(spaceTasksUrl(space)) }] : []),
     { id: "tags", label: "Tags", icon: Hash, shortcut: "", run: () => navigate("/tags") },
@@ -155,6 +171,17 @@ export function CommandPalette() {
             </div>
           </CommandEmpty>
 
+          {question && (
+            <CommandGroup heading="Ask">
+              <CommandItem value="ask-question" onSelect={() => run(() => navigate(`/ask?q=${encodeURIComponent(query.trim())}`))}>
+                <MessageCircleQuestionMark className="text-brand" />
+                <span className="truncate">
+                  Ask <span className="font-medium">“{query.trim()}”</span>
+                </span>
+              </CommandItem>
+            </CommandGroup>
+          )}
+
           {titles.length > 0 && (
             <CommandGroup heading={query.trim() ? "Pages" : "Recently edited"}>
               {titles.map((n) => (
@@ -168,13 +195,19 @@ export function CommandPalette() {
           )}
 
           {fullText.length > 0 && (
-            <CommandGroup heading="Mentioned in">
+            <CommandGroup heading="Best matches">
               {fullText.map((h) => (
-                <CommandItem key={h.path} value={`hit:${h.path}`} onSelect={() => run(() => navigate(pageUrl(h.path)))} className="items-start">
+                <CommandItem
+                  key={`${h.path}#${h.heading ?? ""}`}
+                  value={`hit:${h.path}#${h.heading ?? ""}`}
+                  onSelect={() => run(() => navigate(pageUrl(h.path, h.heading || undefined)))}
+                  className="items-start"
+                >
                   <TextSearch className="mt-0.5 text-muted-foreground" />
                   <div className="grid min-w-0 gap-0.5">
                     <span className="truncate font-medium">
                       {h.title}
+                      {h.heading && <span className="font-normal text-muted-foreground"> › {h.heading}</span>}
                       <span className="ml-2 text-xs font-normal text-muted-foreground">{where(h.path)}</span>
                     </span>
                     <Snippet text={h.snippet} />

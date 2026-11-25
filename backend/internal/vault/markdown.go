@@ -13,6 +13,10 @@ import (
 // target stays clean and a rewrite writes the escape back.
 var wikiLink = regexp.MustCompile(`(!?)\[\[([^\[\]\n|#^]+?)(#[^\[\]\n|]*?)?(\\?\|[^\[\]\n]*)?\]\]`)
 
+// WikiLinkPattern matches [[links]]: 1 is "!" for an embed, 2 the target,
+// 3 the "#heading" and 4 the "|label" (or "\|label" inside a table).
+func WikiLinkPattern() *regexp.Regexp { return wikiLink }
+
 // aliasText is a link's label from its alias group: "|Label" or "\|Label".
 func aliasText(alias string) string {
 	return strings.TrimPrefix(strings.TrimPrefix(alias, "\\"), "|")

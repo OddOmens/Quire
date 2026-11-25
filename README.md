@@ -13,7 +13,8 @@ Quire is one of three self-hosted apps from Odd Omens that are made to work toge
 
 **Finding things**
 
-- **Search, tags, graph.** `⌘K` searches page titles and full text. `#tags` work anywhere on a page. Each space has a graph of how its pages link together.
+- **Search, tags, graph.** `⌘K` searches page titles and full text, and lists the sections that fit best: other forms of a word (`bit`, `bite`), a misspelling or a word typed without its apostrophe still find the page. `#tags` work anywhere on a page. Each space has a graph of how its pages link together.
+- **Ask.** Type a question in plain words (`how do I fix a flat on the Honda?`) and get the section of your pages that answers it, with the page's warnings first and related pages below. It is search, not AI: nothing is written for you, nothing leaves the server, and when your pages don't cover something it says which words it couldn't find. Folders named for your things (`Vehicles/2015 Honda CR-V`, `Devices/MacBook Air`) answer to `my Honda`, `the SUV` or `my laptop`. A page with a `source:` line in its front matter counts as reference material, and your own guides are shown before it.
 - **Open tasks.** Each space's **Tasks** view gathers every unchecked `- [ ]` item from its pages. Ticking one checks it off on its page.
 - **Missing links.** A space's overview lists `[[links]]` to pages that don't exist yet, with a button to create each one.
 - **Calendar.** One calendar of every dated row across your databases.
@@ -283,7 +284,8 @@ The web UI uses a JSON API that a native app can use as-is. Sign in with `POST /
 | `DELETE /api/notes/{path}` | Move a page and its sub-pages to the trash |
 | `POST /api/move` | Move or rename `{from, to}`, with sub-pages, rewriting links |
 | `POST /api/reorder` | Place a page `{path, parent, before}`: under `parent` (a space or page), before the sibling page `before` or last; moves it first if the parent changed |
-| `GET /api/search?q=` | Full-text search (`q=#tag` for a tag) |
+| `GET /api/search?q=` | Full-text search (`q=#tag` for a tag). `best=1` puts the best-fitting sections first, each with its `heading` |
+| `GET /api/ask?q=` | The section that answers a question: `main`, `warning`, `more`, `related`, `chips`, `confidence` (`high`, `medium`, `low`, `none`) and `missing` words. `prev` and `prevPage` keep a follow-up on topic; `spaces=A,B` narrows it |
 | `GET /api/history/{path}`, `GET /api/revisions/{id}`, `POST /api/revisions/{id}/restore` | Page history |
 | `GET /api/deleted-pages` | Pages with history but no file (deleted or moved outside Quire): `path`, `updated`, `versions` and `latest`, the revision to restore |
 | `GET /api/trash`, `POST /api/trash/{id}/restore`, `DELETE /api/trash/{id}` | Trash |

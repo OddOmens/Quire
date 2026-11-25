@@ -16,6 +16,44 @@ export type NoteMeta = {
 }
 
 export type Backlink = { path: string; title: string; context: string }
+
+/** A section of a page shown as (part of) an answer. */
+export type AskSection = {
+  path: string
+  title: string
+  heading: string
+  markdown: string
+  /** Plain text around the words asked, marked \x02…\x03. */
+  snippet?: string
+  section: number
+  /** Only part of a long section is shown. */
+  partial?: boolean
+  /** Reference material (a page with a source: URL). */
+  ref?: boolean
+}
+export type AskChip = { label: string; path: string; section: number }
+
+export type AskAnswer = {
+  query: string
+  intent: string
+  urgent: boolean
+  followUp?: boolean
+  /** Misspelled word → the word used instead. */
+  corrected?: Record<string, string>
+  confidence: "high" | "medium" | "low" | "none"
+  warning?: AskSection
+  main?: AskSection
+  compare?: AskSection[]
+  more: AskSection[]
+  chips: AskChip[]
+  related: AskSection[]
+  terms: string[]
+  /** Words asked that the answer's page doesn't have. */
+  missing?: string[]
+  /** How much can be searched yet (0–1) while older pages are read; absent when done. */
+  building?: number
+}
+export type AskParams = { q?: string; prev?: string; prevPage?: string; page?: string; section?: number; spaces?: string[] }
 export type Outgoing = { target: string; path?: string }
 /** Something on a page that looks like a secret. Never includes the value. */
 export type SecretWarning = { kind: string; label: string; line: number; preview: string }
@@ -69,7 +107,8 @@ export type BackupSettings = { configured: boolean; url?: string; username?: str
 export type BackupInput = { url: string; username: string; password: string; folder: string; hours: number }
 /** order: each folder's custom page order (page names); others follow alphabetically. */
 export type Tree = { notes: NoteMeta[]; folders: string[]; order?: Record<string, string[]> }
-export type Hit = { path: string; title: string; folder: string; snippet: string }
+/** A search result; heading is the section it's in, when the search knows it. */
+export type Hit = { path: string; title: string; folder: string; snippet: string; heading?: string }
 export type Tag = { tag: string; count: number }
 export type Graph = {
   nodes: { path: string; title: string; folder: string; links: number }[]
@@ -374,7 +413,24 @@ export const api = {
   /** Places a page under parent (a space or page path), before the sibling page `before` or last. */
   reorder: (path: string, parent: string, before = "") =>
     request<{ path: string; updated: string[] }>("POST", "/api/reorder", { path, parent, before }),
-  search: (q: string, limit = 20) => request<Hit[]>("GET", `/api/search?q=${encodeURIComponent(q)}&limit=${limit}`),
+  /**
+   * Full-text search. With best, the sections that fit the words best come
+   * first: other forms of a word, other words for the same thing and
+   * misspellings still match.
+   */
+  search: (q: string, limit = 20, best = false) => request<Hit[]>("GET", `/api/search?q=${encodeURIComponent(q)}&limit=${limit}${best ? "&best=1" : ""}`),
+  ask: (p: AskParams) => {
+    const v = new URLSearchParams()
+    if (p.q) v.set("q", p.q)
+    if (p.prev) v.set("prev", p.prev)
+    if (p.prevPage) v.set("prevPage", p.prevPage)
+    if (p.page) v.set("page", p.page)
+    if (p.section !== undefined) v.set("section", String(p.section))
+    if (p.spaces?.length) v.set("spaces", p.spaces.join(","))
+    return request<AskAnswer>("GET", `/api/ask?${v}`)
+  },
+  askSuggestions: (spaces?: string[]) =>
+    request<{ question: string }[]>("GET", `/api/ask/suggestions${spaces?.length ? `?spaces=${encodeURIComponent(spaces.join(","))}` : ""}`),
   tags: () => request<Tag[]>("GET", "/api/tags"),
   graph: (space: string) => request<Graph>("GET", `/api/graph?space=${encodeURIComponent(space)}`),
   upload: (file: File) => {

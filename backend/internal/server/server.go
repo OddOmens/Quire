@@ -114,6 +114,8 @@ func (s *Server) Handler() http.Handler {
 	api("POST /api/move", s.move)
 	api("POST /api/reorder", s.reorder)
 	api("GET /api/search", s.search)
+	api("GET /api/ask", s.ask)
+	api("GET /api/ask/suggestions", s.askSuggestions)
 	api("GET /api/tags", s.tags)
 	api("GET /api/graph", s.graph)
 	api("POST /api/attachments", s.upload)

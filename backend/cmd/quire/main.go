@@ -150,6 +150,10 @@ func run() error {
 	defer stop()
 	go srv.Watch(ctx)
 	go bk.Schedule(ctx)
+	go func() {
+		st.FillPassages(ctx, log)
+		st.WarmSpelling()
+	}()
 
 	hs := &http.Server{
 		Addr:              listen,

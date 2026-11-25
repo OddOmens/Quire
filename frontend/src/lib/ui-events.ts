@@ -1,6 +1,7 @@
 /** App-wide dialogs, opened from anywhere without threading callbacks. */
 
-export const openPalette = () => window.dispatchEvent(new Event("quire:palette"))
+/** Open search, optionally with something already typed in. */
+export const openPalette = (query?: string) => window.dispatchEvent(new CustomEvent("quire:palette", { detail: query }))
 
 /** Create a space. */
 export const openSpaceDialog = () => window.dispatchEvent(new Event("quire:space-dialog"))

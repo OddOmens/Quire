@@ -43,6 +43,7 @@ const TrashPage = screen("trash")
 const SettingsPage = screen("settings")
 const SharePage = screen("share")
 const CalendarPage = screen("calendar")
+const AskPage = screen("ask")
 const FormPage = screen("form")
 const LoginPage = screen("login")
 const SetupPage = screen("setup")
@@ -96,6 +97,7 @@ export default function App() {
         <Route path="/tags/:tag" element={<TagsPage />} />
         <Route path="/trash" element={<TrashPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/ask" element={<AskPage />} />
         <Route path="/form/*" element={<FormPage />} />
         <Route path="/settings/:section?" element={<SettingsPage />} />
       </Route>
