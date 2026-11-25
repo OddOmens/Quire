@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>{{.Title}}</title>
+<style>
+  :root {
+    --bg: #fafafa; --card: #ffffff; --fg: #18181b; --muted: #71717a; --line: #e4e4e7;
+    --focus: #18181b; --danger: #dc2626; --accent: #18181b; --accent-fg: #fafafa; --soft: #f4f4f5;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #09090b; --card: #18181b; --fg: #fafafa; --muted: #a1a1aa; --line: #27272a;
+      --focus: #fafafa; --danger: #f87171; --accent: #fafafa; --accent-fg: #18181b; --soft: #27272a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 40rem; margin: 0 auto; padding: 3rem 1rem 4rem; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 2rem 1.5rem; }
+  @media (min-width: 640px) { .card { padding: 2.5rem 2.5rem; } }
+  h1 { margin: 0 0 .5rem; font-size: 1.625rem; line-height: 1.25; letter-spacing: -0.02em; }
+  .desc { margin: 0 0 1.5rem; color: var(--muted); white-space: pre-line; }
+  .field { margin: 0 0 1.375rem; border: 0; padding: 0; min-width: 0; }
+  label.name, legend.name { display: block; font-weight: 600; font-size: .875rem; margin-bottom: .375rem; padding: 0; }
+  .req { color: var(--danger); margin-left: .125rem; }
+  .help { color: var(--muted); font-size: .8125rem; margin: -.125rem 0 .5rem; }
+  input[type=text], input[type=email], input[type=url], input[type=tel], input[type=date],
+  input[type=datetime-local], select, textarea {
+    width: 100%; font: inherit; color: inherit; background: transparent;
+    border: 1px solid var(--line); border-radius: 8px; padding: .5rem .75rem; min-height: 2.5rem;
+  }
+  textarea { min-height: 6rem; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .choice { display: flex; align-items: center; gap: .5rem; padding: .375rem 0; font-size: .9375rem; }
+  .choice input { width: 1rem; height: 1rem; accent-color: var(--accent); margin: 0; }
+  .problem { color: var(--danger); font-size: .8125rem; margin-top: .375rem; }
+  .invalid input, .invalid select, .invalid textarea { border-color: var(--danger); }
+  .alert { border: 1px solid var(--danger); color: var(--danger); border-radius: 8px; padding: .625rem .875rem; margin-bottom: 1.25rem; font-size: .875rem; }
+  button {
+    font: inherit; font-weight: 600; background: var(--accent); color: var(--accent-fg);
+    border: 0; border-radius: 8px; padding: .625rem 1.25rem; min-height: 2.5rem; cursor: pointer;
+  }
+  button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+  .done { text-align: center; padding: 1rem 0; }
+  .done p { color: var(--muted); margin: 0; white-space: pre-line; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+  {{if .Done}}
+    <div class="done">
+      <h1>{{.Title}}</h1>
+      <p>{{.Thanks}}</p>
+    </div>
+  {{else if .Closed}}
+    <div class="done">
+      <h1>{{.Title}}</h1>
+      <p>This form isn't taking answers right now.</p>
+    </div>
+  {{else}}
+    <h1>{{.Title}}</h1>
+    {{if .Description}}<p class="desc">{{.Description}}</p>{{end}}
+    {{if .Error}}<div class="alert" role="alert">{{.Error}}</div>{{end}}
+    <form method="post" novalidate>
+      <input type="hidden" name="stamp" value="{{.Stamp}}">
+      <div class="hp" aria-hidden="true">
+        <label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+      </div>
+      {{range .Fields}}
+      {{if or (eq .Type "select") (eq .Type "multi") (eq .Type "checkbox")}}
+      <fieldset class="field{{if .Problem}} invalid{{end}}">
+        <legend class="name">{{.Label}}{{if .Required}}<span class="req" aria-hidden="true">*</span>{{end}}</legend>
+        {{if .Help}}<p class="help">{{.Help}}</p>{{end}}
+        {{$f := .}}
+        {{if eq .Type "checkbox"}}
+          <label class="choice"><input type="checkbox" name="{{.ID}}" value="true"{{if eq .Value "true"}} checked{{end}}> Yes</label>
+        {{else if eq .Type "multi"}}
+          {{range .Options}}<label class="choice"><input type="checkbox" name="{{$f.ID}}" value="{{.}}"{{if has $f.Values .}} checked{{end}}> {{.}}</label>{{end}}
+        {{else if le (len .Options) 6}}
+          {{range .Options}}<label class="choice"><input type="radio" name="{{$f.ID}}" value="{{.}}"{{if eq $f.Value .}} checked{{end}}{{if $f.Required}} required{{end}}> {{.}}</label>{{end}}
+        {{else}}
+          <select name="{{.ID}}" aria-label="{{.Label}}"{{if .Required}} required{{end}}>
+            <option value="">Choose…</option>
+            {{range .Options}}<option{{if eq $f.Value .}} selected{{end}}>{{.}}</option>{{end}}
+          </select>
+        {{end}}
+        {{if .Problem}}<p class="problem">{{.Problem}}</p>{{end}}
+      </fieldset>
+      {{else}}
+      <div class="field{{if .Problem}} invalid{{end}}">
+        <label class="name" for="f-{{.ID}}">{{.Label}}{{if .Required}}<span class="req" aria-hidden="true">*</span>{{end}}</label>
+        {{if .Help}}<p class="help">{{.Help}}</p>{{end}}
+        {{if .Long}}
+          <textarea id="f-{{.ID}}" name="{{.ID}}"{{if .Required}} required{{end}}>{{.Value}}</textarea>
+        {{else if eq .Type "date"}}
+          <input id="f-{{.ID}}" name="{{.ID}}" type="{{if eq .Format "datetime"}}datetime-local{{else}}date{{end}}" value="{{.Value}}"{{if .Required}} required{{end}}>
+        {{else if eq .Type "number"}}
+          <input id="f-{{.ID}}" name="{{.ID}}" type="text" inputmode="decimal" value="{{.Value}}"{{if .Required}} required{{end}}>
+        {{else if eq .Type "email"}}
+          <input id="f-{{.ID}}" name="{{.ID}}" type="email" autocomplete="email" value="{{.Value}}"{{if .Required}} required{{end}}>
+        {{else if eq .Type "url"}}
+          <input id="f-{{.ID}}" name="{{.ID}}" type="url" inputmode="url" value="{{.Value}}"{{if .Required}} required{{end}}>
+        {{else if eq .Type "phone"}}
+          <input id="f-{{.ID}}" name="{{.ID}}" type="tel" autocomplete="tel" value="{{.Value}}"{{if .Required}} required{{end}}>
+        {{else}}
+          <input id="f-{{.ID}}" name="{{.ID}}" type="text" value="{{.Value}}"{{if .Required}} required{{end}}>
+        {{end}}
+        {{if .Problem}}<p class="problem">{{.Problem}}</p>{{end}}
+      </div>
+      {{end}}
+      {{end}}
+      <button type="submit">{{.Submit}}</button>
+    </form>
+  {{end}}
+  </div>
+</main>
+</body>
+</html>

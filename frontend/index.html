@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- What meets the top of the screen: the page on a phone, the canvas around the app's frame from 768px up (components/theme-color.tsx keeps these in step with the chosen theme). -->
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light) and (max-width: 767.98px)" />
+    <meta name="theme-color" content="#f4f4f5" media="(prefers-color-scheme: light) and (min-width: 768px)" />
+    <meta name="theme-color" content="#18181a" media="(prefers-color-scheme: dark) and (max-width: 767.98px)" />
+    <meta name="theme-color" content="#0e0e0f" media="(prefers-color-scheme: dark) and (min-width: 768px)" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- default: the system draws the status bar itself, with a clock and battery that can be read in light and dark.
+         (black-translucent draws the page under it with white text, which a light page hides.) -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Quire" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="robots" content="noindex, nofollow" />
+    <!-- The one font file the first paint needs, fetched alongside the CSS rather than after it. -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2" />
+    <title>Quire</title>
+    <!-- The page's colour before the stylesheet arrives, so a dark screen never starts white (--background and --canvas in index.css). -->
+    <style>
+      html { background: #ffffff; }
+      @media (min-width: 768px) { html { background: #f4f4f5; } }
+      @media (prefers-color-scheme: dark) {
+        html { background: #18181a; }
+        @media (min-width: 768px) { html { background: #0e0e0f; } }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

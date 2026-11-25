@@ -1,0 +1,48 @@
+# Quire: self-hosted Markdown pages.
+#
+#   cp .env.example .env     # optional: change the port or folders
+#   docker compose up -d --build
+#   docker compose logs quire   # shows the one-time setup code
+#
+# Then open http://<server>:8196 and create your account with that code.
+#
+# Your pages are plain .md files in QUIRE_NOTES_DIR. The database in
+# QUIRE_DATA_DIR holds your account, devices, page history and share links:
+# back up both folders.
+
+name: quire
+
+services:
+  quire:
+    build:
+      context: .
+      args:
+        VERSION: ${QUIRE_VERSION:-dev}
+    image: ghcr.io/oddomens/quire:${QUIRE_VERSION:-latest}
+    restart: unless-stopped
+    # Run as the owner of the notes folder so other editors can share it.
+    user: "${PUID:-1000}:${PGID:-1000}"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      QUIRE_LOG_LEVEL: ${QUIRE_LOG_LEVEL:-info}
+      QUIRE_SCAN_INTERVAL: ${QUIRE_SCAN_INTERVAL:-10s}
+      QUIRE_TRASH_DAYS: ${QUIRE_TRASH_DAYS:-30}
+      QUIRE_TRUSTED_PROXIES: ${QUIRE_TRUSTED_PROXIES:-}
+      # Serves only public forms on a second address; off unless set.
+      QUIRE_PUBLIC_LISTEN: ${QUIRE_PUBLIC_LISTEN:-}
+    volumes:
+      - ${QUIRE_NOTES_DIR:-./notes}:/notes
+      - ${QUIRE_DATA_DIR:-./data}:/data
+    ports:
+      - "${QUIRE_BIND:-127.0.0.1}:${QUIRE_PORT:-8196}:8080"
+      # Public forms (with QUIRE_PUBLIC_LISTEN=:8081). Bound to this machine
+      # only: put a tunnel or reverse proxy in front if you choose to.
+      # - "127.0.0.1:8197:8081"
+    # Cap the logs so a server left alone for years doesn't fill its disk.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

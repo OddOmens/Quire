@@ -1,0 +1,177 @@
+/*
+ * Styles for the editor's newer blocks: colours, columns, toggle headings,
+ * embeds, dates, media, cards and callout extras. Loaded with the editor
+ * (page-editor.tsx imports it), so pages without an editor don't carry it.
+ * The older blocks are styled in index.css.
+ */
+/* Text and background colours (Notion's palette). */
+:root { --text-gray: #787774; --bg-gray: #f1f1ef; --text-brown: #9f6b53; --bg-brown: #f4eeee; --text-orange: #d9730d; --bg-orange: #fbecdd; --text-yellow: #b88a1e; --bg-yellow: #fbf3db; --text-green: #448361; --bg-green: #edf3ec; --text-blue: #337ea9; --bg-blue: #e7f3f8; --text-purple: #9065b0; --bg-purple: #f4f0f9; --text-pink: #c14c8a; --bg-pink: #faeef4; --text-red: #d44c47; --bg-red: #fdebec; }
+.dark { --text-gray: #9b9b9b; --bg-gray: #2f2f2f; --text-brown: #ba856f; --bg-brown: #4a3228; --text-orange: #c77d48; --bg-orange: #5c3b23; --text-yellow: #ca984d; --bg-yellow: #564328; --text-green: #529e72; --bg-green: #243d30; --text-blue: #5e9bd6; --bg-blue: #143a4e; --text-purple: #a57be0; --bg-purple: #3c2d49; --text-pink: #d15796; --bg-pink: #4e2c3c; --text-red: #df5452; --bg-red: #522e2a; }
+.page-content span[data-color="gray"] { color: var(--text-gray); }
+.page-content .ProseMirror mark[data-color="gray"] { background: var(--bg-gray); }
+.page-content span[data-color="brown"] { color: var(--text-brown); }
+.page-content .ProseMirror mark[data-color="brown"] { background: var(--bg-brown); }
+.page-content span[data-color="orange"] { color: var(--text-orange); }
+.page-content .ProseMirror mark[data-color="orange"] { background: var(--bg-orange); }
+.page-content span[data-color="yellow"] { color: var(--text-yellow); }
+.page-content .ProseMirror mark[data-color="yellow"] { background: var(--bg-yellow); }
+.page-content span[data-color="green"] { color: var(--text-green); }
+.page-content .ProseMirror mark[data-color="green"] { background: var(--bg-green); }
+.page-content span[data-color="blue"] { color: var(--text-blue); }
+.page-content .ProseMirror mark[data-color="blue"] { background: var(--bg-blue); }
+.page-content span[data-color="purple"] { color: var(--text-purple); }
+.page-content .ProseMirror mark[data-color="purple"] { background: var(--bg-purple); }
+.page-content span[data-color="pink"] { color: var(--text-pink); }
+.page-content .ProseMirror mark[data-color="pink"] { background: var(--bg-pink); }
+.page-content span[data-color="red"] { color: var(--text-red); }
+.page-content .ProseMirror mark[data-color="red"] { background: var(--bg-red); }
+.page-content .ProseMirror u { text-underline-offset: 3px; }
+
+/* More callout kinds, titles and folding */
+.page-content .callout[data-callout="success"] { background: var(--callout-tip-bg); --callout-fg: var(--callout-tip-fg); }
+.page-content .callout[data-callout="question"] { background: var(--bg-purple); --callout-fg: var(--text-purple); }
+.page-content .callout[data-callout="example"] { background: var(--bg-pink); --callout-fg: var(--text-pink); }
+.page-content .callout[data-callout="quote"] { background: var(--surface); --callout-fg: var(--muted-foreground); border-color: var(--border); }
+.page-content .callout .callout-head { display: flex; align-items: center; gap: 0.25rem; margin-bottom: 0.25rem; }
+.page-content .callout .callout-title::placeholder { color: color-mix(in oklab, var(--callout-fg) 60%, transparent); }
+.page-content .callout .callout-fold { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; flex: none; border-radius: 4px; color: var(--callout-fg); }
+.page-content .callout .callout-fold:hover { background: color-mix(in oklab, var(--callout-fg) 14%, transparent); }
+.page-content .callout .callout-fold svg { transition: transform 0.15s; }
+.page-content .callout[data-open="true"] .callout-fold svg { transform: rotate(90deg); }
+.page-content .callout[data-open="false"] .callout-body { display: none; }
+.page-content .callout[data-open="false"] .callout-head { margin-bottom: 0; }
+
+/* Toggle headings */
+.page-content .ProseMirror .toggle .toggle-title { display: flex; flex: 1; min-width: 0; margin: 0; font: inherit; letter-spacing: inherit; line-height: inherit; }
+.page-content .toggle[data-level="1"] .toggle-summary { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
+.page-content .toggle[data-level="2"] .toggle-summary { font-size: 1.375rem; font-weight: 650; letter-spacing: -0.015em; line-height: 1.35; }
+.page-content .toggle[data-level="3"] .toggle-summary { font-size: 1.125rem; font-weight: 650; line-height: 1.4; }
+.page-content .toggle[data-level="1"] { margin-top: 2rem; }
+.page-content .toggle[data-level="2"] { margin-top: 1.75rem; }
+.page-content .toggle[data-level="3"] { margin-top: 1.5rem; }
+.page-content .ProseMirror > .toggle:first-child, .page-content .ProseMirror > .react-renderer:first-child > .toggle { margin-top: 0; }
+
+/* Columns */
+.page-content .columns { display: flex; align-items: flex-start; gap: 2rem; margin: 0.75rem 0; }
+.page-content .columns > .column { flex: 1 1 0; min-width: 0; border-radius: 4px; }
+.page-content .columns > .column > * + * { margin-top: 0.5rem; }
+.page-content .columns > .column > :first-child { margin-top: 0; }
+.page-content .ProseMirror[contenteditable="true"] .columns:hover > .column,
+.page-content .ProseMirror[contenteditable="true"] .columns:focus-within > .column { outline: 1px dashed var(--border); outline-offset: 0.375rem; }
+@media (max-width: 640px) {
+  .page-content .columns { flex-direction: column; gap: 0.5rem; }
+  .page-content .columns > .column { flex: none; width: 100%; }
+}
+
+/* Table of contents */
+.page-content .toc { margin: 0.75rem 0; }
+.page-content .toc nav { display: grid; }
+.page-content .toc-item { display: block; width: 100%; text-align: left; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.9375rem; color: var(--muted-foreground); text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--muted-foreground) 30%, transparent); text-underline-offset: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.page-content .toc-item:hover { background: var(--accent); color: var(--foreground); }
+.page-content .toc-empty { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border: 1px dashed var(--border); border-radius: 8px; font-size: 0.875rem; color: var(--muted-foreground); }
+
+/* Embedded pages and inline databases */
+.page-content .embed { margin: 0.75rem 0; border: 1px solid var(--border); border-radius: 0.75rem; }
+.page-content .embed-head { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.5rem 0.4rem 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.8125rem; color: var(--muted-foreground); user-select: none; }
+.page-content .embed-head > svg { flex: none; }
+.page-content .embed-title { flex: 1; min-width: 0; text-align: left; font-weight: 500; color: var(--foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.page-content button.embed-title:hover { text-decoration: underline; text-underline-offset: 3px; }
+.page-content .embed-open { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; flex: none; border-radius: 4px; }
+.page-content .embed-open:hover { background: var(--accent); color: var(--foreground); }
+.page-content .embed-body { padding: 0.75rem 1rem; min-width: 0; }
+.page-content .embed-note { padding: 0.75rem 1rem; font-size: 0.875rem; color: var(--muted-foreground); }
+.page-content .embed-body .embed-note { padding: 0; }
+.page-content .embed.is-plain .embed-head, .page-content .embed-head:last-child { border-bottom: none; }
+.page-content .embed .page-content .ProseMirror { padding-bottom: 0; }
+
+/* Dates */
+.page-content .date-chip { position: relative; display: inline-block; padding: 0 0.3rem; border-radius: 4px; background: var(--muted); font-size: 0.92em; white-space: nowrap; cursor: default; }
+.page-content .date-chip::before { content: "@"; opacity: 0.45; }
+.page-content .ProseMirror[contenteditable="true"] .date-chip { cursor: pointer; }
+.page-content .date-chip.ProseMirror-selectednode { background: var(--brand-soft); box-shadow: none; }
+.page-content .date-chip input { position: absolute; left: 0; bottom: 0; width: 100%; height: 100%; padding: 0; border: none; opacity: 0; pointer-events: none; }
+
+/* Pictures with a caption and a resize grip; audio */
+.page-content .ProseMirror .media-image { position: relative; width: fit-content; max-width: 100%; margin: 0.75rem auto; }
+.page-content .ProseMirror .media-image img { margin: 0; }
+.page-content .ProseMirror .media-image.ProseMirror-selectednode { box-shadow: none; }
+.page-content .ProseMirror .media-image.ProseMirror-selectednode img { outline: 2px solid var(--brand); outline-offset: 2px; }
+.page-content .media-resize { position: absolute; top: 0.5rem; right: 0; bottom: 0.5rem; width: 1rem; cursor: ew-resize; opacity: 0; transition: opacity 0.12s; touch-action: none; }
+.page-content .media-resize::after { content: ""; position: absolute; top: 50%; right: 5px; width: 5px; height: min(3rem, 60%); transform: translateY(-50%); border-radius: 3px; background: rgb(0 0 0 / 0.6); box-shadow: 0 0 0 1px rgb(255 255 255 / 0.75); }
+.page-content .media-image.has-caption .media-resize { bottom: 2rem; }
+.page-content .ProseMirror[contenteditable="true"] .media-image:hover .media-resize, .page-content .media-image.is-resizing .media-resize { opacity: 1; }
+.page-content .ProseMirror[contenteditable="false"] .media-resize { display: none; }
+.page-content .media-caption { display: block; width: 100%; min-width: 12rem; margin-top: 0.375rem; padding: 0; border: none; outline: none; background: transparent; text-align: center; font: inherit; font-size: 0.8125rem; line-height: 1.4; color: var(--muted-foreground); resize: none; overflow: hidden; overflow-wrap: anywhere; }
+/* A picture set to one side: ![alt|left](…) or ![alt|right](…). */
+.page-content .ProseMirror .media-image[data-align="left"] { margin-left: 0; margin-right: auto; }
+.page-content .ProseMirror .media-image[data-align="right"] { margin-left: auto; margin-right: 0; }
+.page-content .media-image[data-align="left"] .media-caption { text-align: left; }
+.page-content .media-image[data-align="right"] .media-caption { text-align: right; }
+.page-content img[data-align="left"] { margin-left: 0; margin-right: auto; }
+.page-content img[data-align="right"] { margin-left: auto; margin-right: 0; }
+.page-content .media-image:not(.has-caption):not(.ProseMirror-selectednode):not(:focus-within) .media-caption,
+.page-content .ProseMirror[contenteditable="false"] .media-image:not(.has-caption) .media-caption { display: none; }
+.page-content .ProseMirror .media-audio { display: block; width: 100%; max-width: 34rem; margin: 0.75rem 0; }
+.page-content .ProseMirror .media-audio.ProseMirror-selectednode { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 9999px; box-shadow: none; }
+
+/* A line that is only a link: page rows, file cards, bookmarks */
+.page-content .ProseMirror p.page-row { display: flex; }
+.page-content .ProseMirror p.page-row .page-link { display: flex; flex: 1; align-items: center; gap: 0.5rem; min-width: 0; margin: 0 -0.375rem; padding: 0.25rem 0.375rem; border-radius: 6px; text-decoration: none; font-weight: 500; }
+.page-content .ProseMirror p.page-row .page-link svg { width: 1.1em; height: 1.1em; }
+.page-content .ProseMirror p.page-row .page-link:hover { background: var(--accent); }
+.page-content .ProseMirror p.file-card,
+.page-content .ProseMirror p.bookmark,
+.page-content .ProseMirror p.bookmark-pending { position: relative; min-height: 2.75rem; padding: 0.55rem 4rem 0.55rem 2.6rem; border: 1px solid var(--border); border-radius: 0.625rem; cursor: pointer; }
+.page-content .ProseMirror p.file-card:hover, .page-content .ProseMirror p.bookmark:hover { background: var(--surface); }
+.page-content .ProseMirror p.file-card::before,
+.page-content .ProseMirror p.bookmark::before,
+.page-content .ProseMirror p.bookmark-pending::after { content: ""; position: absolute; left: 0.8rem; top: 0.75rem; width: 1.2rem; height: 1.2rem; background: var(--muted-foreground); -webkit-mask: var(--card-icon) center / contain no-repeat; mask: var(--card-icon) center / contain no-repeat; }
+.page-content .ProseMirror p.file-card { --card-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3C/svg%3E"); }
+.page-content .ProseMirror p.bookmark, .page-content .ProseMirror p.bookmark-pending { --card-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20'/%3E%3Cpath d='M2 12h20'/%3E%3C/svg%3E"); }
+.page-content .ProseMirror p.file-card a,
+.page-content .ProseMirror p.bookmark a { color: var(--foreground); font-weight: 500; text-decoration: none; cursor: text; }
+.page-content .ProseMirror[contenteditable="false"] p.file-card a, .page-content .ProseMirror[contenteditable="false"] p.bookmark a { cursor: pointer; }
+.page-content .ProseMirror p.file-card::after { content: attr(data-ext); position: absolute; right: 0.75rem; top: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; background: var(--muted); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.04em; line-height: 1.4; color: var(--muted-foreground); }
+.page-content .ProseMirror p.bookmark { padding-right: 0.85rem; }
+.page-content .ProseMirror p.bookmark a { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.page-content .ProseMirror p.bookmark::after { content: attr(data-url); display: block; font-size: 0.8125rem; line-height: 1.4; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.page-content .ProseMirror p.bookmark-pending { border-style: dashed; border-color: var(--input); cursor: text; padding-right: 0.85rem; }
+.page-content .ProseMirror p.bookmark-pending.is-empty::before { content: attr(data-hint); }
+/* A bookmark whose page the server has read: description, site and picture under the title */
+.page-content .ProseMirror p.bookmark.has-details { padding-left: 0.85rem; }
+.page-content .ProseMirror p.bookmark.has-details::before, .page-content .ProseMirror p.bookmark.has-details::after { content: none; }
+.page-content .ProseMirror p.bookmark.has-image { min-height: 6.25rem; padding-right: 9.6rem; }
+/* ProseMirror ends a line with a break after a widget; here it would be an empty row. */
+.page-content .ProseMirror p.bookmark.has-details > :is(br.ProseMirror-trailingBreak, img.ProseMirror-separator) { display: none !important; }
+.page-content .bookmark-details { display: block; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.page-content .bookmark-desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; margin-top: 0.1rem; font-size: 0.8125rem; line-height: 1.45; color: var(--muted-foreground); }
+.page-content .bookmark-site { display: flex; align-items: center; gap: 0.4rem; min-width: 0; margin-top: 0.3rem; font-size: 0.75rem; line-height: 1.4; color: var(--muted-foreground); }
+.page-content .bookmark-site span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page-content .ProseMirror .bookmark-icon { flex: none; width: 1rem; height: 1rem; margin: 0; border-radius: 3px; object-fit: contain; }
+.page-content .ProseMirror .bookmark-image { position: absolute; top: 0; right: 0; width: 8.75rem; height: 100%; margin: 0; border-left: 1px solid var(--border); border-radius: 0 calc(0.625rem - 1px) calc(0.625rem - 1px) 0; object-fit: cover; }
+@media (max-width: 30rem) {
+  .page-content .ProseMirror p.bookmark.has-image { padding-right: 5.6rem; }
+  .page-content .ProseMirror .bookmark-image { width: 4.75rem; }
+}
+
+/* An embed: the other site's player in a frame, its title underneath */
+.page-content .ProseMirror p.embed-card { margin: 0.75rem 0; }
+.page-content .embed-frame { display: block; width: 100%; overflow: hidden; border: 1px solid var(--border); border-radius: 0.625rem; background: var(--muted); }
+.page-content .embed-frame iframe { display: block; width: 100%; height: 100%; border: 0; }
+.page-content .ProseMirror p.embed-card a { display: block; margin-top: 0.3rem; overflow: hidden; font-size: 0.8125rem; color: var(--muted-foreground); text-decoration: none; text-overflow: ellipsis; white-space: nowrap; cursor: text; }
+.page-content .ProseMirror[contenteditable="false"] p.embed-card a { cursor: pointer; }
+.page-content .ProseMirror p.bookmark-pending.is-embed { --card-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 7.75a.75.75 0 0 1 1.142-.638l3.664 2.249a.75.75 0 0 1 0 1.278l-3.664 2.25a.75.75 0 0 1-1.142-.64z'/%3E%3Cpath d='M12 17v4'/%3E%3Cpath d='M8 21h8'/%3E%3Crect x='2' y='3' width='20' height='14' rx='2'/%3E%3C/svg%3E"); }
+
+/* An attached PDF with its pages showing */
+.page-content .ProseMirror .media-pdf { margin: 0.75rem 0; overflow: hidden; border: 1px solid var(--border); border-radius: 0.625rem; }
+.page-content .media-pdf figcaption { display: flex; align-items: center; gap: 0.75rem; margin: 0; padding: 0.45rem 0.8rem; font-size: 0.875rem; line-height: 1.5; text-align: left; color: var(--foreground); }
+.page-content .media-pdf-name { flex: 1; min-width: 0; overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.page-content .ProseMirror .media-pdf figcaption a { flex: none; font-size: 0.8125rem; color: var(--muted-foreground); text-decoration: none; }
+.page-content .ProseMirror .media-pdf figcaption a:hover { color: var(--foreground); }
+.page-content .media-pdf iframe { display: block; width: 100%; height: min(72vh, 46rem); border: 0; border-top: 1px solid var(--border); background: #fff; }
+.page-content .ProseMirror .media-pdf.ProseMirror-selectednode { outline: 2px solid var(--brand); outline-offset: 2px; box-shadow: none; }
+
+/* Blocks without a cursor of their own are only ringed while the editor has focus. */
+.page-content .ProseMirror:not(.ProseMirror-focused) :is(.toc, .embed).ProseMirror-selectednode,
+.page-content .ProseMirror:not(.ProseMirror-focused) .ProseMirror-selectednode:has(> .toc, > .embed) { box-shadow: none; }
+.page-content .toc-item { padding-left: 0.5rem; }

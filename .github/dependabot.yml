@@ -1,0 +1,43 @@
+# Keeps dependencies patched: a pull request when a new version (or a security
+# fix) is out. Minor and patch updates are grouped into one PR per ecosystem,
+# majors into another, so there are only a few to review. CI runs on each.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /backend
+    schedule:
+      interval: weekly
+    groups:
+      go-minor:
+        update-types: [minor, patch]
+      go-major:
+        update-types: [major]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    groups:
+      frontend-minor:
+        update-types: [minor, patch]
+      frontend-major:
+        update-types: [major]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      # Go and Node majors move by hand, with the code that needs them.
+      - dependency-name: golang
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: node
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns: ["*"]

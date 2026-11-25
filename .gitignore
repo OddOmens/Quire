@@ -1,0 +1,10 @@
+node_modules/
+frontend/dist/
+backend/internal/webui/dist/*
+!backend/internal/webui/dist/.keep
+/notes/
+/data/
+.env
+*.log
+.DS_Store
+backend/bin/
